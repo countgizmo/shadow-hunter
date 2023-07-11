@@ -17,4 +17,9 @@ const (
 	RCURLY     = "}"
 	LSQBRACKET = "["
 	RSQBRACKET = "]"
+
+	// Identifiers and friends
+	KEYWORD = "KEYWORD"
+	INT     = "INT"
+	STRING  = "STRING"
 )

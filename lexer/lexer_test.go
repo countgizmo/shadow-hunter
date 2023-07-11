@@ -6,19 +6,28 @@ import (
 	"ziggytwister.com/shadow-hunter/token"
 )
 
+// The first goal is to tokenize this string
+// {:tag :ret, :val "2", :form "(+ 1 1)", :ns "cljs.user", :ms 15}
+
 func TestNextToken(t *testing.T) {
-	input := `(){}[]`
+	input := `{:tag :ret, :val "2", :form "(+ 1 1)", :ns "cljs.user", :ms 15}`
 
 	tests := []struct {
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
-		{token.LPAREN, "("},
-		{token.RPAREN, ")"},
 		{token.LCURLY, "{"},
+		{token.KEYWORD, ":tag"},
+		{token.KEYWORD, ":ret"},
+		{token.KEYWORD, ":val"},
+		{token.STRING, "2"},
+		{token.KEYWORD, ":form"},
+		{token.STRING, "(+ 1 1)"},
+		{token.KEYWORD, ":ns"},
+		{token.STRING, "cljs.user"},
+		{token.KEYWORD, ":ms"},
+		{token.INT, "15"},
 		{token.RCURLY, "}"},
-		{token.LSQBRACKET, "["},
-		{token.RSQBRACKET, "]"},
 		{token.EOF, ""},
 	}
 
