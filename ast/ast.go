@@ -48,8 +48,11 @@ func (ve *VectorElement) TokenLiteral() string { return "vector" }
 func (ve *VectorElement) String() string {
 	var out bytes.Buffer
 	out.WriteString("[")
-	for _, e := range ve.Elements {
+	for i, e := range ve.Elements {
 		out.WriteString(e.String())
+		if i < len(ve.Elements)-1 {
+			out.WriteString(" ")
+		}
 	}
 	out.WriteString("]")
 	return out.String()

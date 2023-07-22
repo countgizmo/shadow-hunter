@@ -49,6 +49,8 @@ func (p *Parser) parseElement() ast.Element {
 		return p.parseKeywordElememt()
 	case token.LCURLY:
 		return p.parseMapElement()
+	case token.LSQBRACKET:
+		return p.parseVectorElement()
 	default:
 		return nil
 	}
@@ -59,11 +61,18 @@ func (p *Parser) parseKeywordElememt() *ast.KeywordElement {
 }
 
 func (p *Parser) parseVectorElement() *ast.VectorElement {
-	element := &ast.VectorElement{Token: p.curToken}
+	vector := &ast.VectorElement{Token: p.curToken}
+	p.nextToken()
 
-	element.Elements = p.ParseEDN().Elements
+	for p.curToken.Type != token.RSQBRACKET && p.curToken.Type != token.EOF {
+		element := p.parseElement()
+		if element != nil {
+			vector.Elements = append(vector.Elements, element)
+		}
+		p.nextToken()
+	}
 
-	return element
+	return vector
 }
 
 func (p *Parser) parseMapElement() *ast.MapElement {
