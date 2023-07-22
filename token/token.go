@@ -22,4 +22,5 @@ const (
 	KEYWORD = "KEYWORD"
 	INT     = "INT"
 	STRING  = "STRING"
+	BOOL    = "BOOL"
 )

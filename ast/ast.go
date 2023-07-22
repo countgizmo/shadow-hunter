@@ -135,3 +135,16 @@ type IntegerLiteral struct {
 func (il *IntegerLiteral) elementNode()         {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string       { return il.Token.Literal }
+
+//
+// Bools
+//
+
+type BoolLiteral struct {
+	Token token.Token
+	Value bool
+}
+
+func (bl *BoolLiteral) elementNode()         {}
+func (bl *BoolLiteral) TokenLiteral() string { return bl.Token.Literal }
+func (bl *BoolLiteral) String() string       { return bl.Token.Literal }
