@@ -31,7 +31,7 @@ func TestKeywordElement(t *testing.T) {
 }
 
 func TestVectorElement(t *testing.T) {
-	input := "[:name :age]"
+	input := "[:name :age 12]"
 
 	l := lexer.New(input)
 	p := New(l)
@@ -52,8 +52,8 @@ func TestVectorElement(t *testing.T) {
 			edn.Elements[0].TokenLiteral())
 	}
 
-	if v := edn.Elements[0].String(); v != "[:name :age]" {
-		t.Fatalf("Vector should look like [:name :age] got %s", v)
+	if v := edn.Elements[0].String(); v != "[:name :age 12]" {
+		t.Fatalf("Vector should look like [:name :age 12] got %s", v)
 	}
 
 	vectorElement, ok := edn.Elements[0].(*ast.VectorElement)
@@ -68,6 +68,20 @@ func TestVectorElement(t *testing.T) {
 
 	if ve := vectorElement.Elements[1].TokenLiteral(); ve != ":age" {
 		t.Fatalf("Expected second element of vector to be :age got %v", ve)
+	}
+
+	if ve := vectorElement.Elements[2].TokenLiteral(); ve != "12" {
+		t.Fatalf("Expected third element of vector to be '12' got %v", ve)
+	}
+
+	num, ok := vectorElement.Elements[2].(*ast.IntegerLiteral)
+
+	if !ok {
+		t.Fatalf("Element not *ast.IntegerLiteral. got=%T", vectorElement.Elements[2])
+	}
+
+	if num.Value != 12 {
+		t.Fatalf("Expect third element to be an integer 12 got %d", num.Value)
 	}
 }
 
