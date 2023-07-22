@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"ziggytwister.com/shadow-hunter/ast"
@@ -137,44 +138,44 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	}
 }
 
-//func TestMapElement(t *testing.T) {
-//	input := `
-//{:name "Jack"}
-//`
-//
-//	l := lexer.New(input)
-//	p := New(l)
-//
-//	edn := p.ParseEDN()
-//	if edn == nil {
-//		t.Fatal("ParseEDN() returned nil")
-//	}
-//	if len(edn.Elements) != 1 {
-//		t.Fatalf("EDN expected to contain 1 element go %d",
-//			len(edn.Elements))
-//	}
-//
-//	tests := []struct {
-//		expectedKey   string
-//		expectedValue string
-//	}{
-//		{":name", "Jack"},
-//	}
-//
-//	for i, tt := range tests {
-//		element := edn.Elements[i]
-//
-//		if !testMapElement(t, element, tt.expectedKey, tt.expectedValue) {
-//			return
-//		}
-//	}
-//}
-//
-//func testMapElement(t *testing.T, e ast.Element, key string, value string) bool {
-//	if e.TokenLiteral() != "{" {
-//		t.Errorf("I don't know what I'm doing yet")
-//		return false
-//	}
-//
-//	return true
-//}
+func TestMapElement(t *testing.T) {
+	input := `
+	{:name "Jack"
+	:age 39}
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	edn := p.ParseEDN()
+
+	fmt.Println(edn)
+	if edn == nil {
+		t.Fatal("ParseEDN() returned nil")
+	}
+	if len(edn.Elements) != 1 {
+		t.Fatalf("EDN expected to contain 1 element go %d",
+			len(edn.Elements))
+	}
+
+	tests := []struct {
+		expectedKey   string
+		expectedValue string
+	}{
+		{":name", "Jack"},
+		{":age", "39"},
+	}
+
+	mapElement := edn.Elements[0].(*ast.MapElement)
+
+	for i, tt := range tests {
+
+		if actualKey := mapElement.Keys[i]; actualKey.String() != tt.expectedKey {
+			t.Fatalf("Expected key %s got %s", tt.expectedKey, actualKey)
+		}
+
+		if actualValue := mapElement.Values[i]; actualValue.String() != tt.expectedValue {
+			t.Fatalf("Expected value %s got %s", tt.expectedValue, actualValue)
+		}
+	}
+}

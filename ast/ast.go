@@ -38,6 +38,10 @@ func (e *EDN) String() string {
 	return out.String()
 }
 
+//
+// Vectors
+//
+
 type VectorElement struct {
 	Token    token.Token
 	Elements []Element
@@ -58,6 +62,10 @@ func (ve *VectorElement) String() string {
 	return out.String()
 }
 
+//
+// Maps
+//
+
 type MapElement struct {
 	Token  token.Token
 	Keys   []Element
@@ -68,9 +76,22 @@ func (me *MapElement) elementNode()         {}
 func (me *MapElement) TokenLiteral() string { return me.Token.Literal }
 func (me *MapElement) String() string {
 	var out bytes.Buffer
-	out.WriteString("TODO")
+	out.WriteString("{")
+	for i, key := range me.Keys {
+		out.WriteString(key.String())
+		out.WriteString(" ")
+		out.WriteString(me.Values[i].String())
+		if i < len(me.Keys)-1 {
+			out.WriteString("\n")
+		}
+	}
+	out.WriteString("}")
 	return out.String()
 }
+
+//
+// Keywords
+//
 
 type KeywordElement struct {
 	Token token.Token
@@ -84,6 +105,27 @@ func (k *KeywordElement) String() string {
 	out.WriteString(k.Value)
 	return out.String()
 }
+
+//
+// Strings
+//
+
+type StringElement struct {
+	Token token.Token
+	Value string
+}
+
+func (k *StringElement) elementNode()         {}
+func (k *StringElement) TokenLiteral() string { return k.Token.Literal }
+func (k *StringElement) String() string {
+	var out bytes.Buffer
+	out.WriteString(k.Value)
+	return out.String()
+}
+
+//
+// Ints
+//
 
 type IntegerLiteral struct {
 	Token token.Token

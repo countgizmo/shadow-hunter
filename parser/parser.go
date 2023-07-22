@@ -60,6 +60,8 @@ func (p *Parser) parseElement() ast.Element {
 		return p.parseMapElement()
 	case token.LSQBRACKET:
 		return p.parseVectorElement()
+	case token.STRING:
+		return p.parseStringElement()
 	default:
 		return nil
 	}
@@ -67,6 +69,10 @@ func (p *Parser) parseElement() ast.Element {
 
 func (p *Parser) parseKeywordElememt() *ast.KeywordElement {
 	return &ast.KeywordElement{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseStringElement() *ast.StringElement {
+	return &ast.StringElement{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) parseVectorElement() *ast.VectorElement {
@@ -81,18 +87,21 @@ func (p *Parser) parseVectorElement() *ast.VectorElement {
 		p.nextToken()
 	}
 
+	p.nextToken()
+
 	return vector
 }
 
 func (p *Parser) parseMapElement() *ast.MapElement {
-	element := &ast.MapElement{Token: p.curToken}
+	mapElement := &ast.MapElement{Token: p.curToken}
+	p.nextToken()
 
 	var i = 0
-	for !p.curTokenIs(token.RCURLY) {
-		if i/2 == 0 {
-			element.Keys = append(element.Keys, p.parseElement())
+	for !p.curTokenIs(token.EOF) && !p.curTokenIs(token.RCURLY) {
+		if i%2 == 0 {
+			mapElement.Keys = append(mapElement.Keys, p.parseElement())
 		} else {
-			element.Values = append(element.Values, p.parseElement())
+			mapElement.Values = append(mapElement.Values, p.parseElement())
 		}
 		i += 1
 		p.nextToken()
@@ -100,7 +109,7 @@ func (p *Parser) parseMapElement() *ast.MapElement {
 
 	p.nextToken()
 
-	return element
+	return mapElement
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Element {
