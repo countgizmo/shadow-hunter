@@ -42,30 +42,24 @@ func (m model) View() string {
 	return baseStyle.Render(m.table.View()) + "\n"
 }
 
-func main() {
-	input := "[:name :age 12]"
-
-	l := lexer.New(input)
-	p := parser.New(l)
-
-	edn := p.ParseEDN()
+func vectorToTable(v *ast.VectorElement, s table.Styles) table.Model {
 	columns := []table.Column{
-		{Title: "Index", Width: 4},
-		{Title: "Element", Width: 10},
+		{Title: "Idx", Width: 10},
+		{Title: "Value", Width: 10},
 	}
 
 	rows := []table.Row{}
+	var row table.Row
 
-	for _, element := range edn.Elements {
+	for i, element := range v.Elements {
 		switch element := element.(type) {
 		case *ast.VectorElement:
-			{
-				for idx, ve := range element.Elements {
-					row := []string{strconv.Itoa(idx), ve.String()}
-					rows = append(rows, row)
-				}
-			}
+			row = []string{strconv.Itoa(i), vectorToTable(element, s).View()}
+		default:
+			row = []string{strconv.Itoa(i), element.String()}
 		}
+
+		rows = append(rows, row)
 	}
 
 	t := table.New(
@@ -74,6 +68,54 @@ func main() {
 		table.WithFocused(true),
 		table.WithHeight(7),
 	)
+
+	t.SetStyles(s)
+
+	return t
+}
+
+func mapToTable(m *ast.MapElement, s table.Styles) table.Model {
+	columns := []table.Column{
+		{Title: "Key", Width: 10},
+		{Title: "Value", Width: 10},
+	}
+
+	rows := []table.Row{}
+	var row table.Row
+
+	for i, key := range m.Keys {
+		switch value := m.Values[i].(type) {
+		case *ast.VectorElement:
+			row = []string{strconv.Itoa(i), vectorToTable(value, s).View()}
+		default:
+			row = []string{key.String(), value.String()}
+		}
+
+		rows = append(rows, row)
+	}
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(7),
+	)
+
+	t.SetStyles(s)
+
+	return t
+}
+
+func main() {
+	input := `
+	{:name "Jack"
+	:age 39}
+	`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+
+	edn := p.ParseEDN()
 
 	s := table.DefaultStyles()
 
@@ -88,9 +130,14 @@ func main() {
 		Background(lipgloss.Color("57")).
 		Bold(false)
 
-	t.SetStyles(s)
+	m := model{}
 
-	m := model{t}
+	for _, element := range edn.Elements {
+		switch element := element.(type) {
+		case *ast.MapElement:
+			m.table = mapToTable(element, s)
+		}
+	}
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
