@@ -1,9 +1,14 @@
 package ast
 
-import "ziggytwister.com/shadow-hunter/token"
+import (
+	"bytes"
+
+	"ziggytwister.com/shadow-hunter/token"
+)
 
 type Node interface {
 	TokenLiteral() string
+	String() string
 }
 
 type Element interface {
@@ -23,6 +28,33 @@ func (e *EDN) TokenLiteral() string {
 	}
 }
 
+func (e *EDN) String() string {
+	var out bytes.Buffer
+
+	for _, s := range e.Elements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
+
+type VectorElement struct {
+	Token    token.Token
+	Elements []Element
+}
+
+func (ve *VectorElement) elementNode()         {}
+func (ve *VectorElement) TokenLiteral() string { return "vector" }
+func (ve *VectorElement) String() string {
+	var out bytes.Buffer
+	out.WriteString("[")
+	for _, e := range ve.Elements {
+		out.WriteString(e.String())
+	}
+	out.WriteString("]")
+	return out.String()
+}
+
 type MapElement struct {
 	Token  token.Token
 	Keys   []Element
@@ -31,6 +63,11 @@ type MapElement struct {
 
 func (me *MapElement) elementNode()         {}
 func (me *MapElement) TokenLiteral() string { return me.Token.Literal }
+func (me *MapElement) String() string {
+	var out bytes.Buffer
+	out.WriteString("TODO")
+	return out.String()
+}
 
 type KeywordElement struct {
 	Token token.Token
@@ -39,3 +76,8 @@ type KeywordElement struct {
 
 func (k *KeywordElement) elementNode()         {}
 func (k *KeywordElement) TokenLiteral() string { return k.Token.Literal }
+func (k *KeywordElement) String() string {
+	var out bytes.Buffer
+	out.WriteString(k.Value)
+	return out.String()
+}

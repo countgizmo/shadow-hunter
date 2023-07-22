@@ -58,6 +58,14 @@ func (p *Parser) parseKeywordElememt() *ast.KeywordElement {
 	return &ast.KeywordElement{Token: p.curToken, Value: p.curToken.Literal}
 }
 
+func (p *Parser) parseVectorElement() *ast.VectorElement {
+	element := &ast.VectorElement{Token: p.curToken}
+
+	element.Elements = p.ParseEDN().Elements
+
+	return element
+}
+
 func (p *Parser) parseMapElement() *ast.MapElement {
 	element := &ast.MapElement{Token: p.curToken}
 

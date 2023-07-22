@@ -29,6 +29,34 @@ func TestKeywordElement(t *testing.T) {
 	}
 }
 
+func TestVectorElement(t *testing.T) {
+	input := "[:name :age]"
+
+	l := lexer.New(input)
+	p := New(l)
+
+	edn := p.ParseEDN()
+
+	if edn == nil {
+		t.Fatal("ParseEDN() returned nil")
+	}
+
+	if len(edn.Elements) != 2 {
+		t.Fatalf("EDN expected to contain 2 element go %d",
+			len(edn.Elements))
+	}
+
+	if edn.Elements[0].TokenLiteral() != ":name" {
+		t.Fatalf("Expected first element to be :name got %v",
+			edn.Elements[0].TokenLiteral())
+	}
+
+	if edn.Elements[1].TokenLiteral() != ":age" {
+		t.Fatalf("Expected first element to be :age got %v",
+			edn.Elements[0].TokenLiteral())
+	}
+}
+
 //func TestMapElement(t *testing.T) {
 //	input := `
 //{:name "Jack"}
