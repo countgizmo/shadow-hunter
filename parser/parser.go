@@ -1,10 +1,17 @@
 package parser
 
 import (
+	"fmt"
+	"strconv"
+
 	"ziggytwister.com/shadow-hunter/ast"
 	"ziggytwister.com/shadow-hunter/lexer"
 	"ziggytwister.com/shadow-hunter/token"
 )
+
+func (p *Parser) curTokenIs(t token.TokenType) bool {
+	return p.curToken.Type == t
+}
 
 type Parser struct {
 	l *lexer.Lexer
@@ -45,6 +52,8 @@ func (p *Parser) ParseEDN() *ast.EDN {
 
 func (p *Parser) parseElement() ast.Element {
 	switch p.curToken.Type {
+	case token.INT:
+		return p.parseIntegerLiteral()
 	case token.KEYWORD:
 		return p.parseKeywordElememt()
 	case token.LCURLY:
@@ -94,6 +103,16 @@ func (p *Parser) parseMapElement() *ast.MapElement {
 	return element
 }
 
-func (p *Parser) curTokenIs(t token.TokenType) bool {
-	return p.curToken.Type == t
+func (p *Parser) parseIntegerLiteral() ast.Element {
+	lit := &ast.IntegerLiteral{Token: p.curToken}
+
+	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+		fmt.Println(msg)
+		return nil
+	}
+
+	lit.Value = value
+	return lit
 }

@@ -93,6 +93,36 @@ func TestEmptyVectorElement(t *testing.T) {
 	}
 }
 
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+
+	l := lexer.New(input)
+	p := New(l)
+	edn := p.ParseEDN()
+
+	if len(edn.Elements) != 1 {
+		t.Fatalf("program has not enough statements. got=%d",
+			len(edn.Elements))
+	}
+
+	element, ok := edn.Elements[0].(ast.Element)
+	if !ok {
+		t.Fatalf("edn.Elements[0] is not ast.Element got=%T", edn.Elements[0])
+	}
+
+	literal, ok := element.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("exp not *ast.IntegerLiteral. got=%T", element)
+	}
+	if literal.Value != 5 {
+		t.Errorf("literal.Value not %d. got=%d", 5, literal.Value)
+	}
+	if literal.TokenLiteral() != "5" {
+		t.Errorf("literal.TokenLiteral not %s. got=%s", "5",
+			literal.TokenLiteral())
+	}
+}
+
 //func TestMapElement(t *testing.T) {
 //	input := `
 //{:name "Jack"}
