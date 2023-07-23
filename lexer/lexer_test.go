@@ -47,3 +47,43 @@ func TestNextToken(t *testing.T) {
 		}
 	}
 }
+
+func TestNextTokenWithNestedMaps(t *testing.T) {
+	input := `{1 {:name "Jack"}
+	           2 {:name "Blob"}}`
+
+	tests := []struct {
+		expectedType    token.TokenType
+		expectedLiteral string
+	}{
+		{token.LCURLY, "{"},
+		{token.INT, "1"},
+		{token.LCURLY, "{"},
+		{token.KEYWORD, ":name"},
+		{token.STRING, "Jack"},
+		{token.RCURLY, "}"},
+		{token.INT, "2"},
+		{token.LCURLY, "{"},
+		{token.KEYWORD, ":name"},
+		{token.STRING, "Blob"},
+		{token.RCURLY, "}"},
+		{token.RCURLY, "}"},
+		{token.EOF, ""},
+	}
+
+	l := New(input)
+
+	for i, tt := range tests {
+		tok := l.NextToken()
+
+		if tok.Type != tt.expectedType {
+			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
+				i, tt.expectedType, tok.Type)
+		}
+
+		if tok.Literal != tt.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
+				i, tt.expectedLiteral, tok.Literal)
+		}
+	}
+}

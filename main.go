@@ -18,7 +18,8 @@ type model struct {
 
 func main() {
 	input := `
-	{:todos {1 :done}`
+	{1 {:name "yo"}
+   2 {:name "ho"}} `
 
 	l := lexer.New(input)
 	p := parser.New(l)

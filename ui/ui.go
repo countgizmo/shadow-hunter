@@ -57,7 +57,14 @@ func (m mainModel) getCurrentDataSlice() ast.Element {
 
 func (m mainModel) Init() tea.Cmd { return nil }
 
+func rowHasNestedData(row []string) bool {
+	rowType := row[len(row)-1]
+
+	return rowType == "Map" || rowType == "Vector"
+}
+
 func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	maxHeight := len(m.table.Rows())
 
 	switch msg := msg.(type) {
@@ -74,10 +81,14 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.menuCursor++
 			}
 		case "enter":
-			m.path = append(m.path, m.menuCursor)
-			m.currentPathIdx++
+			row := m.table.Rows()[m.menuCursor]
+			if rowHasNestedData(row) {
+				m.path = append(m.path, m.menuCursor)
+				m.currentPathIdx++
+			}
 		case "backspace":
 			if m.currentPathIdx > 0 {
+				m.path = m.path[:len(m.path)-1]
 				m.currentPathIdx--
 			}
 		}
@@ -89,11 +100,15 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.table = mapToTable(data)
 	}
 
-	return m, nil
+	m.table, cmd = m.table.Update(msg)
+	return m, cmd
 }
 
 func (m mainModel) View() string {
-	return baseStyle.Render(m.table.View()) + "\n"
+	s := baseStyle.Render(m.table.View()) + "\n"
+	s += fmt.Sprintf("%v %v\n", m.currentPathIdx, m.path)
+
+	return s
 }
 
 func vectorToTable(v *ast.VectorElement) table.Model {
@@ -131,7 +146,8 @@ func vectorToTable(v *ast.VectorElement) table.Model {
 func mapToTable(m *ast.MapElement) table.Model {
 	columns := []table.Column{
 		{Title: "Key", Width: 10},
-		{Title: "Value", Width: 10},
+		{Title: "Value", Width: 30},
+		{Title: "Type", Width: 10},
 	}
 
 	rows := []table.Row{}
@@ -140,11 +156,11 @@ func mapToTable(m *ast.MapElement) table.Model {
 	for i, key := range m.Keys {
 		switch value := m.Values[i].(type) {
 		case *ast.MapElement:
-			row = []string{key.String(), "..."}
+			row = []string{key.String(), value.String(), "Map"}
 		case *ast.VectorElement:
-			row = []string{key.String(), vectorToTable(value).View()}
+			row = []string{key.String(), vectorToTable(value).View(), "Vector"}
 		default:
-			row = []string{key.String(), value.String()}
+			row = []string{key.String(), value.String(), ""}
 		}
 
 		rows = append(rows, row)

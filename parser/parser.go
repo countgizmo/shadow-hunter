@@ -96,18 +96,16 @@ func (p *Parser) parseMapElement() *ast.MapElement {
 	mapElement := &ast.MapElement{Token: p.curToken}
 	p.nextToken()
 
-	var i = 0
+	i := 0
 	for !p.curTokenIs(token.EOF) && !p.curTokenIs(token.RCURLY) {
 		if i%2 == 0 {
 			mapElement.Keys = append(mapElement.Keys, p.parseElement())
 		} else {
 			mapElement.Values = append(mapElement.Values, p.parseElement())
 		}
-		i += 1
 		p.nextToken()
+		i++
 	}
-
-	p.nextToken()
 
 	return mapElement
 }
