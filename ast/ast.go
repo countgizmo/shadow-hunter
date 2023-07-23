@@ -76,6 +76,7 @@ func (me *MapElement) elementNode()         {}
 func (me *MapElement) TokenLiteral() string { return me.Token.Literal }
 func (me *MapElement) String() string {
 	var out bytes.Buffer
+
 	out.WriteString("{")
 	for i, key := range me.Keys {
 		out.WriteString(key.String())

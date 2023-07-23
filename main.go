@@ -26,5 +26,4 @@ func main() {
 	edn := p.ParseEDN()
 
 	ui.Render(edn)
-
 }

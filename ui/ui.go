@@ -33,25 +33,63 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("240"))
 
 type mainModel struct {
-	edn   *ast.EDN
-	table table.Model
+	edn            *ast.EDN
+	table          table.Model
+	menuCursor     int
+	path           []int
+	currentPathIdx int
+}
+
+func (m mainModel) getCurrentDataSlice() ast.Element {
+	result := m.edn.Elements[0]
+
+	for i := 1; i <= m.currentPathIdx; i++ {
+		switch element := result.(type) {
+		case *ast.MapElement:
+			result = element.Values[m.path[i]]
+		case *ast.VectorElement:
+			result = element.Elements[m.path[i]]
+		}
+	}
+
+	return result
 }
 
 func (m mainModel) Init() tea.Cmd { return nil }
 
 func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
+	maxHeight := len(m.table.Rows())
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc", "q":
+		case "esc", "q", "ctrl+c":
 			return m, tea.Quit
+		case "up", "k":
+			if m.menuCursor > 0 {
+				m.menuCursor--
+			}
+		case "down", "j":
+			if m.menuCursor < maxHeight {
+				m.menuCursor++
+			}
+		case "enter":
+			m.path = append(m.path, m.menuCursor)
+			m.currentPathIdx++
+		case "backspace":
+			if m.currentPathIdx > 0 {
+				m.currentPathIdx--
+			}
 		}
 	}
 
-	m.table, cmd = m.table.Update(msg)
-	return m, cmd
+	data := m.getCurrentDataSlice()
+	switch data := data.(type) {
+	case *ast.MapElement:
+		m.table = mapToTable(data)
+	}
+
+	return m, nil
 }
 
 func (m mainModel) View() string {
@@ -125,13 +163,13 @@ func mapToTable(m *ast.MapElement) table.Model {
 }
 
 func Render(edn *ast.EDN) {
-	m := mainModel{edn: edn}
+	m := mainModel{edn: edn, path: []int{0}, currentPathIdx: 0}
 
-	for _, element := range edn.Elements {
-		switch element := element.(type) {
-		case *ast.MapElement:
-			m.table = mapToTable(element)
-		}
+	// NOTE(Evgheni): I assume the data starts with a single root element
+
+	switch element := edn.Elements[0].(type) {
+	case *ast.MapElement:
+		m.table = mapToTable(element)
 	}
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
