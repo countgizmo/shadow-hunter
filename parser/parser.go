@@ -139,3 +139,9 @@ func (p *Parser) parseIntegerLiteral() ast.Element {
 	lit.Value = value
 	return lit
 }
+
+func ParseString(ednString string) *ast.EDN {
+	l := lexer.New(ednString)
+	p := New(l)
+	return p.ParseEDN()
+}

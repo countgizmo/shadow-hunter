@@ -126,7 +126,10 @@ func (l *Lexer) readString() string {
 	l.readChar() //reading left side '"'
 	startPosition := l.currentPosition
 
-	for l.ch != '"' {
+	for l.currentPosition < len(l.input) {
+		if l.ch == '"' && l.input[l.currentPosition-1] != '\\' {
+			break
+		}
 		l.readChar()
 	}
 

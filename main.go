@@ -1,34 +1,11 @@
 package main
 
 import (
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/lipgloss"
-	"ziggytwister.com/shadow-hunter/lexer"
-	"ziggytwister.com/shadow-hunter/parser"
+	"ziggytwister.com/shadow-hunter/transmitter"
 	"ziggytwister.com/shadow-hunter/ui"
 )
 
-var baseStyle = lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("240"))
-
-type model struct {
-	table table.Model
-}
-
 func main() {
-	input := `
-	{:todos {1 {:id 1
-		          :title "Buy milk"
-              :done false}
-					 2 {:id 2
-						  :title "Eat cookies"
-				      :done true}} `
-
-	l := lexer.New(input)
-	p := parser.New(l)
-
-	edn := p.ParseEDN()
-
+	edn := transmitter.GetAppDB("localhost", "5555")
 	ui.Render(edn)
 }
