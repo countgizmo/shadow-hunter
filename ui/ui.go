@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"ziggytwister.com/shadow-hunter/ast"
+	"ziggytwister.com/shadow-hunter/transmitter"
 )
 
 var tableHeaderStyle = table.DefaultStyles().Header.
@@ -55,7 +56,10 @@ func (m mainModel) getCurrentDataSlice() ast.Element {
 	return result
 }
 
-func (m mainModel) Init() tea.Cmd { return nil }
+func (m *mainModel) Init() tea.Cmd {
+	m.reset()
+	return nil
+}
 
 func rowHasNestedData(row []string) bool {
 	rowType := row[len(row)-1]
@@ -63,7 +67,27 @@ func rowHasNestedData(row []string) bool {
 	return rowType == "Map" || rowType == "Vector"
 }
 
-func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *mainModel) showCurrentData() {
+	data := m.getCurrentDataSlice()
+	switch data := data.(type) {
+	case *ast.MapElement:
+		m.table = mapToTable(data)
+	}
+	m.menuCursor = 0
+}
+
+func (m *mainModel) reset() tea.Msg {
+	m.edn = transmitter.GetAppDB("localhost", "5555")
+
+	switch element := m.edn.Elements[0].(type) {
+	case *ast.MapElement:
+		m.table = mapToTable(element)
+	}
+
+	return nil
+}
+
+func (m *mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	maxHeight := len(m.table.Rows())
 	previousPathIdx := m.currentPathIdx
@@ -92,16 +116,15 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.path = m.path[:len(m.path)-1]
 				m.currentPathIdx--
 			}
+		case "r":
+			m.reset()
+			m.showCurrentData()
 		}
+
 	}
 
 	if previousPathIdx != m.currentPathIdx {
-		data := m.getCurrentDataSlice()
-		switch data := data.(type) {
-		case *ast.MapElement:
-			m.table = mapToTable(data)
-		}
-		m.menuCursor = 0
+		m.showCurrentData()
 	}
 
 	m.table, cmd = m.table.Update(msg)
@@ -182,15 +205,8 @@ func mapToTable(m *ast.MapElement) table.Model {
 	return t
 }
 
-func Render(edn *ast.EDN) {
-	m := mainModel{edn: edn, path: []int{0}, currentPathIdx: 0, menuCursor: 0}
-
-	// NOTE(Evgheni): I assume the data starts with a single root element
-
-	switch element := edn.Elements[0].(type) {
-	case *ast.MapElement:
-		m.table = mapToTable(element)
-	}
+func Start() {
+	m := &mainModel{path: []int{0}, currentPathIdx: 0, menuCursor: 0}
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
