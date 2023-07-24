@@ -62,6 +62,8 @@ func (p *Parser) parseElement() ast.Element {
 		return p.parseVectorElement()
 	case token.STRING:
 		return p.parseStringElement()
+	case token.TRUE, token.FALSE:
+		return p.parseBoolLiteral()
 	default:
 		return nil
 	}
@@ -73,6 +75,20 @@ func (p *Parser) parseKeywordElememt() *ast.KeywordElement {
 
 func (p *Parser) parseStringElement() *ast.StringElement {
 	return &ast.StringElement{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseBoolLiteral() *ast.BoolLiteral {
+	lit := &ast.BoolLiteral{Token: p.curToken}
+
+	value, err := strconv.ParseBool(p.curToken.Literal)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as bool", p.curToken.Literal)
+		fmt.Println(msg)
+		return nil
+	}
+
+	lit.Value = value
+	return lit
 }
 
 func (p *Parser) parseVectorElement() *ast.VectorElement {

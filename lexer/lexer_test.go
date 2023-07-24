@@ -49,7 +49,8 @@ func TestNextToken(t *testing.T) {
 }
 
 func TestNextTokenWithNestedMaps(t *testing.T) {
-	input := `{1 {:name "Jack"}
+	input := `{1 {:name "Jack"
+                :done false}
 	           2 {:name "Blob"}}`
 
 	tests := []struct {
@@ -61,6 +62,8 @@ func TestNextTokenWithNestedMaps(t *testing.T) {
 		{token.LCURLY, "{"},
 		{token.KEYWORD, ":name"},
 		{token.STRING, "Jack"},
+		{token.KEYWORD, ":done"},
+		{token.FALSE, "false"},
 		{token.RCURLY, "}"},
 		{token.INT, "2"},
 		{token.LCURLY, "{"},
