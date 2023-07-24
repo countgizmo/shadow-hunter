@@ -49,7 +49,11 @@ func (l *Lexer) NextToken() token.Token {
 	case ']':
 		tok = newToken(token.RSQBRACKET, l.ch)
 	default:
-		if isKeyword(l.ch) {
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			return tok
+		} else if isKeyword(l.ch) {
 			tok.Literal = l.readKeyword()
 			tok.Type = token.KEYWORD
 			return tok
@@ -81,6 +85,20 @@ func isKeyword(ch rune) bool {
 
 func isString(ch rune) bool {
 	return ch == '"'
+}
+
+func isLetter(ch rune) bool {
+	return unicode.IsLetter(ch)
+}
+
+func (l *Lexer) readIdentifier() string {
+	startPosition := l.currentPosition
+
+	for unicode.IsLetter(l.ch) {
+		l.readChar()
+	}
+
+	return string(l.input[startPosition:l.currentPosition])
 }
 
 func (l *Lexer) readKeyword() string {

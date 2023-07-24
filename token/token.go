@@ -10,6 +10,7 @@ type Token struct {
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
+	IDENT   = "IDENT"
 
 	LPAREN     = "("
 	RPAREN     = ")"
@@ -22,5 +23,21 @@ const (
 	KEYWORD = "KEYWORD"
 	INT     = "INT"
 	STRING  = "STRING"
-	BOOL    = "BOOL"
+
+	// Reserved
+	TRUE  = "TRUE"
+	FALSE = "FALSE"
 )
+
+var reserved = map[string]TokenType{
+	"true":  TRUE,
+	"false": FALSE,
+}
+
+func LookupIdent(ident string) TokenType {
+	if tok, ok := reserved[ident]; ok {
+		return tok
+	}
+
+	return IDENT
+}
