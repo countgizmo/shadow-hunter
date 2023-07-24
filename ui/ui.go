@@ -66,6 +66,7 @@ func rowHasNestedData(row []string) bool {
 func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	maxHeight := len(m.table.Rows())
+	previousPathIdx := m.currentPathIdx
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -94,10 +95,13 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	data := m.getCurrentDataSlice()
-	switch data := data.(type) {
-	case *ast.MapElement:
-		m.table = mapToTable(data)
+	if previousPathIdx != m.currentPathIdx {
+		data := m.getCurrentDataSlice()
+		switch data := data.(type) {
+		case *ast.MapElement:
+			m.table = mapToTable(data)
+		}
+		m.menuCursor = 0
 	}
 
 	m.table, cmd = m.table.Update(msg)
@@ -106,7 +110,7 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m mainModel) View() string {
 	s := baseStyle.Render(m.table.View()) + "\n"
-	s += fmt.Sprintf("%v %v\n", m.currentPathIdx, m.path)
+	s += fmt.Sprintf("%v %v %v\n", m.currentPathIdx, m.path, m.menuCursor)
 
 	return s
 }
@@ -179,7 +183,7 @@ func mapToTable(m *ast.MapElement) table.Model {
 }
 
 func Render(edn *ast.EDN) {
-	m := mainModel{edn: edn, path: []int{0}, currentPathIdx: 0}
+	m := mainModel{edn: edn, path: []int{0}, currentPathIdx: 0, menuCursor: 0}
 
 	// NOTE(Evgheni): I assume the data starts with a single root element
 
