@@ -33,7 +33,15 @@ var baseStyle = lipgloss.NewStyle().
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderForeground(lipgloss.Color("240"))
 
+type uiState int
+
+const (
+	title = iota
+	navigator
+)
+
 type mainModel struct {
+	state          uiState
 	edn            *ast.EDN
 	table          table.Model
 	menuCursor     int
@@ -132,8 +140,15 @@ func (m *mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m mainModel) View() string {
-	s := baseStyle.Render(m.table.View()) + "\n"
-	s += fmt.Sprintf("%v %v %v\n", m.currentPathIdx, m.path, m.menuCursor)
+	var s string
+
+	switch m.state {
+	case title:
+		s = TitleView()
+	case navigator:
+		s = baseStyle.Render(m.table.View()) + "\n"
+		s += fmt.Sprintf("%v %v %v\n", m.currentPathIdx, m.path, m.menuCursor)
+	}
 
 	return s
 }
@@ -206,7 +221,7 @@ func mapToTable(m *ast.MapElement) table.Model {
 }
 
 func Start() {
-	m := &mainModel{path: []int{0}, currentPathIdx: 0, menuCursor: 0}
+	m := &mainModel{state: title, path: []int{0}, currentPathIdx: 0, menuCursor: 0}
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
