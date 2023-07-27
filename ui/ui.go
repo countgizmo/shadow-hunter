@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"ziggytwister.com/shadow-hunter/ast"
@@ -33,6 +34,18 @@ var baseStyle = lipgloss.NewStyle().
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderForeground(lipgloss.Color("240"))
 
+var (
+	focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	cursorStyle         = focusedStyle.Copy()
+	noStyle             = lipgloss.NewStyle()
+	helpStyle           = blurredStyle.Copy()
+	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+
+	focusedButton = focusedStyle.Copy().Render("[ Submit ]")
+	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+)
+
 type uiState int
 
 const (
@@ -47,6 +60,10 @@ type mainModel struct {
 	menuCursor     int
 	path           []int
 	currentPathIdx int
+	host           string
+	port           string
+	hostInput      textinput.Model
+	portInput      textinput.Model
 }
 
 func (m mainModel) getCurrentDataSlice() ast.Element {
@@ -65,7 +82,7 @@ func (m mainModel) getCurrentDataSlice() ast.Element {
 }
 
 func (m *mainModel) Init() tea.Cmd {
-	m.reset()
+	//m.reset()
 	return nil
 }
 
@@ -85,7 +102,7 @@ func (m *mainModel) showCurrentData() {
 }
 
 func (m *mainModel) reset() tea.Msg {
-	m.edn = transmitter.GetAppDB("localhost", "5555")
+	m.edn = transmitter.GetAppDB(m.host, m.port)
 
 	switch element := m.edn.Elements[0].(type) {
 	case *ast.MapElement:
@@ -144,7 +161,7 @@ func (m mainModel) View() string {
 
 	switch m.state {
 	case title:
-		s = TitleView()
+		s = TitleView(m)
 	case navigator:
 		s = baseStyle.Render(m.table.View()) + "\n"
 		s += fmt.Sprintf("%v %v %v\n", m.currentPathIdx, m.path, m.menuCursor)
@@ -220,10 +237,29 @@ func mapToTable(m *ast.MapElement) table.Model {
 	return t
 }
 
-func Start() {
-	m := &mainModel{state: title, path: []int{0}, currentPathIdx: 0, menuCursor: 0}
+func initialModel() mainModel {
+	m := mainModel{state: title, path: []int{0}, currentPathIdx: 0, menuCursor: 0}
 
-	if _, err := tea.NewProgram(m).Run(); err != nil {
+	m.hostInput = textinput.New()
+	m.hostInput.Cursor.Style = cursorStyle
+	m.hostInput.CharLimit = 50
+	m.hostInput.Placeholder = "host"
+	m.hostInput.Focus()
+	m.hostInput.PromptStyle = focusedStyle
+	m.hostInput.TextStyle = focusedStyle
+
+	m.portInput = textinput.New()
+	m.portInput.Cursor.Style = cursorStyle
+	m.portInput.CharLimit = 30
+	m.portInput.Placeholder = "port"
+
+	return m
+}
+
+func Start() {
+	m := initialModel()
+
+	if _, err := tea.NewProgram(&m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
