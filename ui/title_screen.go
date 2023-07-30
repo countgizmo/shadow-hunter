@@ -2,21 +2,37 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 )
 
-var style = lipgloss.NewStyle().
-	Bold(true).
-	Foreground(lipgloss.Color("#FAFAFA")).
-	Background(lipgloss.Color("#7D56F4")).
-	PaddingTop(1).
-	PaddingBottom(1).
-	Width(30).
-	Align(lipgloss.Center)
+var (
+	width = 96
+
+	docStyle = lipgloss.NewStyle().Padding(1, 2, 1, 2)
+
+	subtle = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
+
+	titleStyle = lipgloss.NewStyle().
+			Padding(1).
+			Align(lipgloss.Center).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#874BFD"))
+
+	dialogBoxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#874BFD")).
+			Padding(1, 0).
+			BorderTop(true).
+			BorderLeft(true).
+			BorderRight(true).
+			BorderBottom(true)
+)
 
 type titleModel struct {
 	focusIndex int
@@ -24,23 +40,41 @@ type titleModel struct {
 }
 
 func TitleView(m mainModel) string {
+	physicalWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	var b strings.Builder
-	fmt.Fprintln(&b, style.Render("Shadow Hunter"))
 
-	// Host input
-	b.WriteString(m.inputs[0].View())
-	b.WriteRune('\n')
-	// Port input
-	b.WriteString(m.inputs[1].View())
-
-	button := &blurredButton
-	if m.inputs[0].Value() != "" && m.inputs[1].Value() != "" {
-		button = &focusedButton
+	// title
+	{
+		title := lipgloss.Place(width, 1,
+			lipgloss.Center, lipgloss.Center,
+			titleStyle.Render("Shadow Hunter"),
+		)
+		b.WriteString(title + "\n\n")
 	}
 
-	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
+	submitButtonStyle := buttonStyle
+	if m.focusIndex == len(m.inputs) {
+		submitButtonStyle = activeButtonStyle
+	}
 
-	return b.String()
+	question := lipgloss.NewStyle().Width(50).PaddingBottom(1).Align(lipgloss.Center).Render("PREPL connection:")
+	inputs := lipgloss.JoinVertical(lipgloss.Left, m.inputs[0].View(), m.inputs[1].View())
+	button := submitButtonStyle.Render("Submit")
+	form := lipgloss.JoinVertical(lipgloss.Left, question, inputs)
+	ui := lipgloss.JoinVertical(lipgloss.Center, form, button)
+
+	dialog := lipgloss.Place(width, 9,
+		lipgloss.Center, lipgloss.Center,
+		dialogBoxStyle.Render(ui),
+	)
+
+	fmt.Fprintf(&b, dialog+"\n\n")
+
+	if physicalWidth > 0 {
+		docStyle = docStyle.MaxWidth(physicalWidth)
+	}
+
+	return docStyle.Render(b.String())
 }
 
 func (m *mainModel) UpdateTitle(msg tea.Msg) (tea.Model, tea.Cmd) {
