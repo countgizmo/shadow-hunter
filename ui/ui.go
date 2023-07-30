@@ -62,8 +62,8 @@ type mainModel struct {
 	currentPathIdx int
 	host           string
 	port           string
-	hostInput      textinput.Model
-	portInput      textinput.Model
+	focusIndex     int
+	inputs         []textinput.Model
 }
 
 func (m mainModel) getCurrentDataSlice() ast.Element {
@@ -113,6 +113,10 @@ func (m *mainModel) reset() tea.Msg {
 }
 
 func (m *mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.state == title {
+		return m.UpdateTitle(msg)
+	}
+
 	var cmd tea.Cmd
 	maxHeight := len(m.table.Rows())
 	previousPathIdx := m.currentPathIdx
@@ -238,20 +242,25 @@ func mapToTable(m *ast.MapElement) table.Model {
 }
 
 func initialModel() mainModel {
-	m := mainModel{state: title, path: []int{0}, currentPathIdx: 0, menuCursor: 0}
+	m := mainModel{
+		state:          title,
+		path:           []int{0},
+		currentPathIdx: 0,
+		menuCursor:     0,
+		inputs:         make([]textinput.Model, 2)}
 
-	m.hostInput = textinput.New()
-	m.hostInput.Cursor.Style = cursorStyle
-	m.hostInput.CharLimit = 50
-	m.hostInput.Placeholder = "host"
-	m.hostInput.Focus()
-	m.hostInput.PromptStyle = focusedStyle
-	m.hostInput.TextStyle = focusedStyle
+	m.inputs[0] = textinput.New()
+	m.inputs[0].Cursor.Style = cursorStyle
+	m.inputs[0].CharLimit = 50
+	m.inputs[0].Placeholder = "host"
+	m.inputs[0].Focus()
+	m.inputs[0].PromptStyle = focusedStyle
+	m.inputs[0].TextStyle = focusedStyle
 
-	m.portInput = textinput.New()
-	m.portInput.Cursor.Style = cursorStyle
-	m.portInput.CharLimit = 30
-	m.portInput.Placeholder = "port"
+	m.inputs[1] = textinput.New()
+	m.inputs[1].Cursor.Style = cursorStyle
+	m.inputs[1].CharLimit = 30
+	m.inputs[1].Placeholder = "port"
 
 	return m
 }
