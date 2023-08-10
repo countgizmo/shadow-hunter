@@ -95,7 +95,7 @@ func (m mainModel) getCurrentDataSlice() ast.Element {
 }
 
 func (m *mainModel) Init() tea.Cmd {
-	return tea.EnterAltScreen
+	return nil
 }
 
 func rowHasNestedData(row []string) bool {
@@ -214,6 +214,7 @@ func vectorToTable(v *ast.VectorElement) table.Model {
 		table.WithRows(rows),
 		table.WithFocused(true),
 		table.WithHeight(7),
+		table.WithWidth(20),
 	)
 
 	t.SetStyles(tableStyle)
@@ -283,7 +284,7 @@ func initialModel() mainModel {
 func Start() {
 	m := initialModel()
 
-	if _, err := tea.NewProgram(&m).Run(); err != nil {
+	if _, err := tea.NewProgram(&m, tea.WithAltScreen()).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
