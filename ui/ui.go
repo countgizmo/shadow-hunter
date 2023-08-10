@@ -108,7 +108,7 @@ func (m *mainModel) showCurrentData() {
 	data := m.getCurrentDataSlice()
 	switch data := data.(type) {
 	case *ast.MapElement:
-		m.table = mapToTable(data)
+		m.table = m.mapToTable(data)
 	}
 	m.menuCursor = 0
 }
@@ -121,7 +121,7 @@ func (m *mainModel) reset() tea.Msg {
 
 	switch element := m.edn.Elements[0].(type) {
 	case *ast.MapElement:
-		m.table = mapToTable(element)
+		m.table = m.mapToTable(element)
 	}
 
 	return nil
@@ -183,13 +183,13 @@ func (m mainModel) View() string {
 		s = TitleView(m)
 	case navigator:
 		s = baseStyle.Render(m.table.View()) + "\n"
-		s += fmt.Sprintf("%v %v %v\n", m.currentPathIdx, m.path, m.menuCursor)
+		s += fmt.Sprintf("%v %v %v \n", m.currentPathIdx, m.path, m.menuCursor)
 	}
 
 	return s
 }
 
-func vectorToTable(v *ast.VectorElement) table.Model {
+func (m *mainModel) vectorToTable(v *ast.VectorElement) table.Model {
 	columns := []table.Column{
 		{Title: "Idx", Width: 10},
 		{Title: "Value", Width: 10},
@@ -201,7 +201,7 @@ func vectorToTable(v *ast.VectorElement) table.Model {
 	for i, element := range v.Elements {
 		switch element := element.(type) {
 		case *ast.VectorElement:
-			row = []string{strconv.Itoa(i), vectorToTable(element).View()}
+			row = []string{strconv.Itoa(i), m.vectorToTable(element).View()}
 		default:
 			row = []string{strconv.Itoa(i), element.String()}
 		}
@@ -214,7 +214,6 @@ func vectorToTable(v *ast.VectorElement) table.Model {
 		table.WithRows(rows),
 		table.WithFocused(true),
 		table.WithHeight(7),
-		table.WithWidth(20),
 	)
 
 	t.SetStyles(tableStyle)
@@ -222,22 +221,22 @@ func vectorToTable(v *ast.VectorElement) table.Model {
 	return t
 }
 
-func mapToTable(m *ast.MapElement) table.Model {
+func (m *mainModel) mapToTable(mapElement *ast.MapElement) table.Model {
 	columns := []table.Column{
 		{Title: "Key", Width: 10},
-		{Title: "Value", Width: 30},
+		{Title: "Value", Width: 80},
 		{Title: "Type", Width: 10},
 	}
 
 	rows := []table.Row{}
 	var row table.Row
 
-	for i, key := range m.Keys {
-		switch value := m.Values[i].(type) {
+	for i, key := range mapElement.Keys {
+		switch value := mapElement.Values[i].(type) {
 		case *ast.MapElement:
 			row = []string{key.String(), value.String(), "Map"}
 		case *ast.VectorElement:
-			row = []string{key.String(), vectorToTable(value).View(), "Vector"}
+			row = []string{key.String(), m.vectorToTable(value).View(), "Vector"}
 		default:
 			row = []string{key.String(), value.String(), ""}
 		}
@@ -249,7 +248,7 @@ func mapToTable(m *ast.MapElement) table.Model {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(7),
+		table.WithHeight(15),
 	)
 
 	t.SetStyles(tableStyle)
@@ -284,7 +283,7 @@ func initialModel() mainModel {
 func Start() {
 	m := initialModel()
 
-	if _, err := tea.NewProgram(&m, tea.WithAltScreen()).Run(); err != nil {
+	if _, err := tea.NewProgram(&m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
