@@ -95,8 +95,7 @@ func (m mainModel) getCurrentDataSlice() ast.Element {
 }
 
 func (m *mainModel) Init() tea.Cmd {
-	//m.reset()
-	return nil
+	return tea.EnterAltScreen
 }
 
 func rowHasNestedData(row []string) bool {
