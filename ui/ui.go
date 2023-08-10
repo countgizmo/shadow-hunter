@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 
@@ -66,6 +67,7 @@ const (
 
 type mainModel struct {
 	state          uiState
+	conn           net.Conn
 	edn            *ast.EDN
 	table          table.Model
 	menuCursor     int
@@ -113,7 +115,10 @@ func (m *mainModel) showCurrentData() {
 }
 
 func (m *mainModel) reset() tea.Msg {
-	m.edn = transmitter.GetAppDB(m.host, m.port)
+	if m.conn == nil {
+		m.conn = transmitter.GetConnection(m.host, m.port)
+	}
+	m.edn = transmitter.GetAppDB(m.conn)
 
 	switch element := m.edn.Elements[0].(type) {
 	case *ast.MapElement:

@@ -11,7 +11,7 @@ import (
 	"ziggytwister.com/shadow-hunter/parser"
 )
 
-func GetAppDB(host string, port string) *ast.EDN {
+func GetConnection(host string, port string) net.Conn {
 	address := host + ":" + port
 	conn, err := net.Dial("tcp", address)
 
@@ -19,6 +19,10 @@ func GetAppDB(host string, port string) *ast.EDN {
 		log.Fatalf("Cannot create TCP connection with %s", address)
 	}
 
+	return conn
+}
+
+func GetAppDB(conn net.Conn) *ast.EDN {
 	fmt.Fprintf(conn, "@re-frame.db/app-db"+"\n")
 
 	message, _ := bufio.NewReader(conn).ReadString('\n')
